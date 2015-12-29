@@ -1,5 +1,6 @@
 var videoPlayer;
 var commentForm;
+var youCommentTimer;
 inVideoComments = {
 	setup: function () {
 		var playerElement = $('#videoPlayer');
@@ -26,7 +27,6 @@ inVideoComments = {
 	listen: function () {
 		console.log('Listening for click on videoplayer');
 		document.getElementById(videoPlayer.id).addEventListener("click", inVideoComments.processPosition);
-
 	},
 	unlisten: function() {
 		console.log('Stopped listening for click on videoplayer');
@@ -42,8 +42,7 @@ inVideoComments = {
 
 		var percentageLocation = inVideoComments.positionPXtoPercentage(positionInPlayer);
 		console.log('Checking if form is disabled');
-		console.log(playerStarted);
-		if (commentForm.el.data('disabled') && playerStarted) {
+		if (commentForm.el.data('disabled') === true && playerStarted) {
 			console.log('Form is not disabled, create it');
 			inVideoComments.createCommentForm(percentageLocation);
 		}
@@ -86,6 +85,7 @@ inVideoComments = {
 		inVideoComments.commentData.location  = JSON.stringify(positionInPlayer);
 		inVideoComments.commentData.videoTime = youtubePlayer.playerTime().current;
 
+		youtubePlayer.loop(4);
 	},
 	watchCommentForm: function() {
 		console.log('Watching comment form');
@@ -108,7 +108,6 @@ inVideoComments = {
 	},
 	postCommentForm: function() {
 		var formData = inVideoComments.commentData;
-
 		$.post('/api/index.php', formData, function(data, status){
 			if (status == 'success'){
 				inVideoComments.closeCommentForm();
@@ -120,9 +119,11 @@ inVideoComments = {
 		console.log('Closing comment form');
 		commentForm.el.removeAttr('style');
 		commentForm.el.attr('data-disabled', 'true');
+		youtubePlayer.loop(0);
+
 		setTimeout(function() {
 			inVideoComments.listen();
-		}, 100);
+		}, 10);
 	},
 	loadComments: function(videoID) {
 		var request = {
@@ -130,36 +131,46 @@ inVideoComments = {
 			videoID : videoID,
 			type    : 'inVideo'
 		};
+
 		$.post('/api/index.php', request, function(data, status){
 			if (status == 'success'){
 				var comments = $.parseJSON(data);
 
 				inVideoComments.renderComments(comments);
 				inVideoComments.comments = comments;
+
+			} else {
+				alert(status);
 			}
 		});
 	},
 	comments: {},
 	renderComments: function(comments) {
+
 		$(comments).each(function() {
 			var commentData = $(this)[0];
 			var offset = JSON.parse(commentData.location);
 			$('#commentOverlay').append('<article class="comment" id="comment-'+commentData.id+'" style="top:'+ offset.y +'%;left:'+ offset.x+ '%;";" data-showtime="'+commentData.videoTime+'"><p>'+commentData.comment+'</p><small>By @<a href="//twitter.com/'+commentData.userHandle+'">'+commentData.userHandle+'</a></small></article>');
 		});
+
 	},
 	timeComments: function(event) {
 		if (event.data == YT.PlayerState.PLAYING) {
 
 			youCommentTimer = setInterval(function () {
-				var currentPlaytime = youtubePlayer.playerTime().current;
+				var currentPlaytime = Number(youtubePlayer.playerTime().current);
+				console.log(currentPlaytime);
 				for (var i = 0; i < inVideoComments.comments.length; i++){
-					var thisShowtime = inVideoComments.comments[i].videoTime;
+					var thisShowtime = Number(inVideoComments.comments[i].videoTime);
 					var thisID = '#comment-'+inVideoComments.comments[i].id;
-					if (thisShowtime >= currentPlaytime && thisShowtime <= currentPlaytime + 3){
-						$(thisID).fadeIn('fast');
+					//&& currentPlaytime <= (thisShowtime + 4)
+
+					if (thisShowtime < currentPlaytime && currentPlaytime <= (thisShowtime + 4)){
+						console.log(thisShowtime + ' is bigger then ' + currentPlaytime);
+						$(thisID).show('fast');
 						console.log(thisID + ' is showing');
 					} else {
-						$(thisID).fadeOut('fast');
+						$(thisID).hide('fast');
 					}
 					//console.log(thisID);
 				}
@@ -172,3 +183,8 @@ inVideoComments = {
 };
 
 inVideoComments.setup();
+
+
+$('#player').click(function() {
+	alert("me");
+});

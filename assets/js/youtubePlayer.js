@@ -1,4 +1,5 @@
-var youCommentTimer;
+var loopTimer;
+var looping = false;
 var playerStarted = false;
 var youtubePlayer = {
 	player: {},
@@ -28,34 +29,38 @@ var youtubePlayer = {
 		//initComments();
 	},
 	playerTime: function() {
-		return {current: youtubePlayer.player.getCurrentTime()}
+		return {current: youtubePlayer.player.getCurrentTime()};
 	},
 	onPlayerStateChange: function(event) {
 		inVideoComments.timeComments(event);
 	},
 	loop: function(seconds){
-		if (seconds !== 0) {
+		if (seconds !== 0 && looping === false) {
 			console.log('Starting loop');
+
+			looping = true;
+
 			var startTime = youtubePlayer.playerTime().current;
 			var currentTime = youtubePlayer.playerTime().current;
 			console.log('Starttime is: ' + startTime);
 
 			if (youtubePlayer.playerState() == YT.PlayerState.PLAYING) {
 				console.log('Is playing, so start interval function')
-				youCommentTimer = setInterval(function () {
+				loopTimer = setInterval(function () {
 
-					if (startTime + seconds > currentTime) {
-						youtubePlayer.player.seekTo(startTime);
-						console.log('Going back to starttime');
-					}
+					youtubePlayer.player.seekTo(startTime);
+					console.log('Going back to starttime');
+
 					console.log('looping');
-				}, 1000);
+				}, seconds * 1000);
 
 			} else {
-				clearTimeout(youCommentTimer);
+				clearTimeout(loopTimer);
+				looping = false;
 			}
 		} else {
-			clearTimeout(youCommentTimer);
+			clearTimeout(loopTimer);
+			looping = false;
 		}
 	}
 };

@@ -34,10 +34,10 @@
 #commentOverlay {
   position: absolute;
   width: 100%;
-  height:100%;
+  height:calc(100% - 40px);
   top:0;
   left: 0;
-  pointer-events:none;
+  cursor:pointer;
 }
 
 .inlineCommentForm {
@@ -63,6 +63,8 @@
   line-height:1;
   p {
     margin-bottom:0;
-
+  }
+  a {
+    color:#fff;
   }
 }

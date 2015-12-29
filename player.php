@@ -72,7 +72,6 @@ print_r($result);
 					$i = 0;
 					foreach ($comments as $comment):
 					$i++;
-					print_r($comment);
 				?>
 					<div id="comment-<?= $i; ?>" class="comment" data-time="<?= $comment['videoTime']; ?>">
 						<figure class="userImage">
@@ -100,7 +99,7 @@ print_r($result);
 			</div>
 		</div>
 	</section>
-	<script src="assets/js/app.js"></script>
+	<script src="assets/js/youtubePlayer.js"></script>
 	<script src="assets/js/inVideoComments.js"></script>
 <?php
 
